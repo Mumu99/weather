@@ -16,6 +16,7 @@
  */
 
 const https = require('https');
+const zlib = require('zlib');
 
 // ======================== 配置 ========================
 
@@ -34,12 +35,19 @@ function httpsGet(url) {
     const options = {
       hostname: urlObj.hostname,
       path: urlObj.pathname + urlObj.search,
-      headers: { 'Accept-Encoding': 'identity' },
     };
     https.get(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => data += chunk);
+      let chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
       res.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        const encoding = res.headers['content-encoding'];
+        let data;
+        if (encoding && encoding.includes('gzip')) {
+          data = zlib.gunzipSync(buffer).toString();
+        } else {
+          data = buffer.toString();
+        }
         try {
           resolve(JSON.parse(data));
         } catch (e) {
