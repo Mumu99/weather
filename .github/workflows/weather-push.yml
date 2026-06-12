@@ -1,0 +1,30 @@
+name: 每日天气推送
+
+on:
+  schedule:
+    # 每天早上 7:30 执行（UTC 时间 23:30 = 北京时间 7:30）
+    - cron: '30 23 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 执行天气推送
+        env:
+          WX_APPID: ${{ secrets.WX_APPID }}
+          WX_SECRET: ${{ secrets.WX_SECRET }}
+          WX_TEMPLATE_ID: ${{ secrets.WX_TEMPLATE_ID }}
+          WX_OPENID: ${{ secrets.WX_OPENID }}
+          WEATHER_KEY: ${{ secrets.WEATHER_KEY }}
+          WEATHER_CITY: ${{ secrets.WEATHER_CITY }}
+        run: node weather-push.js
