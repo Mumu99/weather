@@ -114,13 +114,15 @@ async function getWeather() {
   // 3. 生成温馨提示
   const advice = getAdvice(today.textDay, Number(today.tempMax));
 
+  console.log('🔄 天气原始数据:', JSON.stringify(today, null, 2));
+
   return {
     date: today.fxDate,
     weather: today.textDay,
     tempMin: today.tempMin,
     tempMax: today.tempMax,
-    windDir: today.windDir,
-    windScale: today.windScale,
+    windDir: today.windDirDay || today.windDir,
+    windScale: today.windScaleDay || today.windScale,
     humidity: today.humidity,
     advice,
   };
