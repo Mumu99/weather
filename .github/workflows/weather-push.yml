@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: 执行天气推送
+      - name: 执行天气推送脚本
         env:
           WX_APPID: ${{ secrets.WX_APPID }}
           WX_SECRET: ${{ secrets.WX_SECRET }}
