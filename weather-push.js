@@ -26,6 +26,7 @@ const TEMPLATE_ID = process.env.WX_TEMPLATE_ID;
 const OPENID = process.env.WX_OPENID;
 const WEATHER_KEY = process.env.WEATHER_KEY;
 const CITY = process.env.WEATHER_CITY || '深圳';
+const TEST_MODE = process.env.TEST_MODE === 'true'; // 测试模式，不实际发送
 
 // ======================== HTTP 工具 ========================
 
@@ -150,6 +151,24 @@ async function getAccessToken() {
 }
 
 async function sendTemplateMessage(token, weather) {
+  if (TEST_MODE) {
+    console.log('🧪 测试模式：不实际发送消息');
+    console.log('📨 模拟发送内容:', JSON.stringify({
+      touser: OPENID,
+      template_id: TEMPLATE_ID,
+      data: {
+        date: { value: weather.date },
+        city: { value: CITY },
+        weather: { value: weather.weather },
+        temp: { value: `${weather.tempMin}°C ~ ${weather.tempMax}°C` },
+        wind: { value: `${weather.windDir} ${weather.windScale}级` },
+        humidity: { value: `${weather.humidity}%` },
+        advice: { value: weather.advice },
+      },
+    }, null, 2));
+    return { errcode: 0, msgid: 'test_mode' };
+  }
+
   const url = `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${token}`;
   const body = {
     touser: OPENID,
@@ -180,6 +199,19 @@ async function sendTemplateMessage(token, weather) {
 async function main() {
   console.log('🚀 开始执行每日天气推送...');
   console.log(`📍 城市: ${CITY}`);
+  
+  // 检查环境变量
+  console.log('\n📝 检查环境变量:');
+  console.log(`  WX_APPID: ${APPID ? '✅ 已设置' : '❌ 未设置'}`);
+  console.log(`  WX_SECRET: ${SECRET ? '✅ 已设置' : '❌ 未设置'}`);
+  console.log(`  WX_TEMPLATE_ID: ${TEMPLATE_ID ? '✅ 已设置' : '❌ 未设置'}`);
+  console.log(`  WX_OPENID: ${OPENID ? '✅ 已设置' : '❌ 未设置'}`);
+  console.log(`  WEATHER_KEY: ${WEATHER_KEY ? '✅ 已设置' : '❌ 未设置'}`);
+  console.log(`  WEATHER_CITY: ${CITY}`);
+  
+  if (!APPID || !SECRET || !TEMPLATE_ID || !OPENID || !WEATHER_KEY) {
+    throw new Error('❌ 环境变量缺失，请检查 GitHub Secrets 配置');
+  }
 
   try {
     const weather = await getWeather();
@@ -192,6 +224,7 @@ async function main() {
     console.log('🎉 推送完成！');
   } catch (err) {
     console.error('❌ 推送失败:', err.message);
+    console.error('详细错误信息:', err);
     process.exit(1);
   }
 }
